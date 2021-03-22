@@ -1,10 +1,15 @@
 {
 	"folders": [
 		{
-			"path": "../../../3. Semester/Deep Learning/ODQA"
+			"name": "Open-Domain-MedQA",
+			"path": "."
 		},
 		{
-			"path": "."
+			"name": "data_clean",
+			"path": "data_clean"
+		},
+		{
+			"path": "data_clean/questions"
 		}
 	],
 	"settings": {}
