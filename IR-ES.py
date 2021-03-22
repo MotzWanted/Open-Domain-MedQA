@@ -191,7 +191,8 @@ def get_reweighted_accuracy(data_dict, index_name, ngram_func):
             S_scores = []
             for item in out:
                 D = SparseMethods.prep_document(item['evidence']['content'])
-                S_scores.append(sparseMethods.S(Q, D))
+                S_scores.append(sparseMethods.S(Q, D) + item['score'])
+
             scores.append(sum(s for s in S_scores))
 
         if ans_opt[np.argmax(scores)] == data_dict[key]['ans']:
