@@ -10,7 +10,7 @@ from transformers import BertPreTrainedModel, BertModel, BertConfig, BertTokeniz
 from transformers.modeling_bert import BertOnlyMLMHead, ACT2FN
 from tokenizers import BertWordPieceTokenizer
 
-from ..config import Config
+from zebraodqa.cli_config import Config
 from .reader import Reader
 
 # Main REALMReader model

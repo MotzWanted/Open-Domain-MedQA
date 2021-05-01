@@ -1,0 +1,8 @@
+appName: ZebraODQA
+logLevel: WARN
+
+resources:
+  embedder:
+    gs_url: "gs://realm-data/cc_news_pretrained/embedder"
+  reader:
+    gs_url: "gs://realm-data/cc_news_pretrained/bert"

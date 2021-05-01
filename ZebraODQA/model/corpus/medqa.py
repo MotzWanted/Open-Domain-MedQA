@@ -7,7 +7,7 @@ from typing import List
 
 from datasets import load_dataset, load_from_disk
 
-class MedQACorpus(Corpus):
+class MedQACorpus():
     def __init__(self, tokenizer):
         # try:
         #     self.corpus = load_from_disk(os.path.join(Config.cache_dir, "wikipedia/"))

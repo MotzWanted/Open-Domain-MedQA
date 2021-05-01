@@ -11,6 +11,11 @@ zebraodqa = "zebraodqa.main:app"
 [tool.poetry.dependencies]
 python = ">=3.6.2, <4.0"
 typer = {extras = ["all"], version = "^0.3.2"}
+transformers = "^4.5.1"
+confuse = "^1.4.0"
+alive-progress = "^1.6.2"
+datasets = "^1.6.2"
+torch = "^1.8.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"
