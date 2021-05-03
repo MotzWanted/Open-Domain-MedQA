@@ -1,5 +1,13 @@
 appName: ZebraODQA
 logLevel: WARN
+cache_dir: "/Users/starostka/Desktop"
+
+
+model: "bert-base-uncased"
+tokenizer: "bert-base-uncased"
+corpus: "crime_and_punish"
+
+batch_size: 16
 
 resources:
   embedder:
