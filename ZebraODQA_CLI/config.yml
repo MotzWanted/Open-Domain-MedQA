@@ -1,0 +1,4 @@
+"appName: ZebraODQA\nlogLevel: WARN\ncache_dir: /Users/starostka/Desktop\n\n\nmodel:\
+  \ bert-base-uncased\ntokenizer: bert-base-uncased\ncorpus: crime_and_punish\n\n\
+  batch_size: 16\n\nresources:\n    embedder:\n        gs_url: gs://realm-data/cc_news_pretrained/embedder\n\
+  \    reader:\n        gs_url: gs://realm-data/cc_news_pretrained/bert\n"

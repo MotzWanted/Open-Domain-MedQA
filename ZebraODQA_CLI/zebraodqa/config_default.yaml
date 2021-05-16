@@ -1,0 +1,16 @@
+appName: ZebraODQA
+logLevel: WARN
+cache_dir: "/Users/starostka/Desktop"
+
+
+model: "bert-base-uncased"
+tokenizer: "bert-base-uncased"
+corpus: "crime_and_punish"
+
+batch_size: 16
+
+resources:
+  embedder:
+    gs_url: "gs://realm-data/cc_news_pretrained/embedder"
+  reader:
+    gs_url: "gs://realm-data/cc_news_pretrained/bert"
