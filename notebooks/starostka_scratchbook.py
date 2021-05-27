@@ -24,6 +24,13 @@ with open("medqa_dataset.json") as df_file:
 df = pd.DataFrame.from_dict(df['data'])
 df.head()
 
+# HuggingFace dataset to PyTorch
+from datasets import load_dataset
+BERT_MODEL_NAME = "dmis-lab/biobert-base-cased-v1.1" # https://huggingface.co/dmis-lab/biobert-base-cased-v1.1
+tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_NAME)
+dataset = load_dataset("json", data_files="medqa_dataset.json", field='data', split='train')
+dataset = dataset.map(lambda e: tokenizer(), batched=True)
+
 # splitting
 train_df, val_df = train_test_split(df, test_size=0.05)
 train_df.shape, val_df.shape
