@@ -1,41 +1,54 @@
 import sys
-import ijson
 import json
-from tqdm import tqdm
+from tqdm import std, tqdm
 from os import getenv, path
 import re
+import spacy
+import scispacy
 
-# Map the MedQA dataset to features of Squad
+#nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_sci_sm") # trained on UML tags and other huge biomedical libraries
+
+# Create MedQA Dataset
+# Command: cat qbank | python generate_medqa_dataset.py > medqa_dataset.json
 
 # open file descriptors for 
-c_file = open("medqa_dataset_construction/questions/US/US_qbank.jsonl", 'r')
+# c_file = open("medqa_dataset_construction/questions/US/US_qbank.jsonl", 'r')
+
+qbank = sys.stdin.read().splitlines()
 
 dataset = {
     'version': '0.0.1',
     'data': []
 }
 
-d_file = open("medqa_dataset", "w")
+# focus_words = {'is', 'does', 'do', 'what', 'when', 'where', 'who', 'why', 'what', 'how', 'which'}
 
 id = 0
-for line in tqdm(c_file):
+for line in tqdm(qbank):
     sample:json = json.loads(line)
 
-    sample_question = re.sub(r'\n+', ' ', sample['question'])
-    question = sample_question[sample_question.rfind('.')+2:sample_question.find('?')+1]
-    symptoms = sample_question.replace(question, '')
-    answers = [sample['options'].get(sample['answer'])] # we may want to add more answers ex. using MetaMap
+    clean_sample_question = re.sub(r'\n+', '', sample['question'])
+    doc = nlp(clean_sample_question)
+    sents = list(doc.sents)
 
-    for key, option in sample['options'].items():
-        structure = {
+    question = sents[-1].text.strip()
+    symptoms = ' '.join(t.text for t in sents[:-1]).strip()
+
+    answer = sample['options'].get(sample['answer_idx']) # we may want to add more answers ex. using MetaMap
+    options = sample['options']
+    answer_idx = sample['answer_idx']
+
+    structure = {
             'id': id,
             #'title': # we don't have title of article or section where the answer was given...
             'symptoms': symptoms, # patient symptoms
-            'question': question + ' ' + option,
-            'answers': answers
-        }
-        dataset['data'].append(structure)
-        id += 1
-json.dump(dataset, d_file)
-c_file.close()
-d_file.close()
+            'question': question,
+            'answer': answer,
+            'options': options,
+            'answer_idx': answer_idx
+    }
+    dataset['data'].append(structure)
+    id += 1
+
+json.dump(dataset, sys.stdout, indent=2)

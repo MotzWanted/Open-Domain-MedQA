@@ -6,6 +6,9 @@ from tqdm import tqdm
 from os import getenv, path, getcwd
 import re
 
+# Generate MedQA corpus
+# Command: cat qbank | python generate_medqa_corpus_100w.py
+
 c_file = open("./corpus/medqa_corpus.json", 'r')
 objects = ijson.items(c_file, 'data.item')
 books = list(objects)
