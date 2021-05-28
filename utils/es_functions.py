@@ -15,11 +15,12 @@ def es_remove_index(index_name:str):
     """
     es.indices.delete(index=index_name)
 
-def es_ingest(index_name:str, paragraph:str):
+def es_ingest(index_name:str, title:str, paragraph:str):
     """
     Ingest to ElasticSearch Index
     """
     doc = {
+        'title': title,
         'text': paragraph
     }
     response = es.index(index=index_name, body=doc)
