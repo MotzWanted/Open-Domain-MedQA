@@ -33,7 +33,7 @@ def es_search(index_name:str, query:str, results:int):
     response = es.search(
         index=index_name,
         body={
-            "query": {"match": {"sentence": query.lower()}},
+            "query": {"match": {"text": query.lower()}},
             "from": 0,
             "size": results
         })

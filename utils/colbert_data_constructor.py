@@ -1,8 +1,8 @@
-import json, os, re, request
-import .es_functions
+import json, os, re, requests
+from utils.es_functions import *
 from tqdm import tqdm
 
-def getDocChunks(article, title, chunkSize=100, stride=50):
+def getDocChunks(article, chunkSize=100, stride=50):
     article = article.replace('\n', ' ').replace('\r', '')
     doc = article.split()
 
@@ -34,56 +34,59 @@ counter = 0
 
 for ds_id, ds in enumerate(datasets):
     out = {
-    'version': '0.0.1',
-    'data': []
-    }
+        'version': '0.0.1',
+        'data': []
+        }
     for key in tqdm(list(ds.keys())[:100]):
-        q_id = int(key[1:]) 
-        es_create_index(q_id)
 
         if ds[key]['FZ_results']:
+            q_id = int(key[1:]) 
+            es_create_index(q_id)
             is_golden = False
             synonyms = set()
             length_ = 0
+            answer_options = [dev[key]['answer_options'][opt] for opt in dev[key]['answer_options'].keys()]
 
             for article in ds[key]['FZ_results']:
-                synonyms.add(ds[key]['FZ_results']['synonyms'])
-                docs = getDocChunks(article, ds[key]['FZ_results']['title'], chunkSize=100, stride=50)
+                synonyms.update(article['synonyms'])
+                docs = getDocChunks(article['doc_context'], chunkSize=100, stride=50)
                 
                 length_ += len(docs)
                 for doc in docs:
-                    es_ingest(q_id, doc)
-                
-                
-            es_res = es_search(q_id, dev[key]['question'], length_)
+                    _ = es_ingest(q_id, article['title'], doc)
             
+            #print(length_)
+            es_res = es_search(q_id, dev[key]['question'], length_)
+
             for hit in es_res['hits']:
+                #print(hit)
                 counter += 1
                 if is_golden==False:
-                    is_golden = is_positive(hit['text'], dev[key]['answer'], synonyms)
+                    is_golden = is_positive(hit['_source']['text'], dev[key]['answer'], synonyms)
                     
-                    out['data'] = {
-                        'idx' : counter
+                    out['data'].append({
+                        'idx' : counter,
                         'question_id' : q_id,
                         'question' : dev[key]['question'],
-                        'answer_choices' : dev[key]['answer_options'],
-                        'answer_idx' : dev[key]['answer_options'].index(dev[key]['answer']),
-                        'document' : hit['title'] + ' ' + hit['text'],
+                        'answer_choices' : answer_options,
+                        'answer_idx' : answer_options.index(dev[key]['answer']),
+                        'document' : hit['_source']['title'] + ' ' + hit['_source']['text'],
                         'is_gold' : is_golden
-                    }
+                    })
 
                 else:
-                    out['data'] = {
-                            'idx' : counter
+                    out['data'].append({
+                            'idx' : counter,
                             'question_id' : q_id,
                             'question' : dev[key]['question'],
-                            'answer_choices' : dev[key]['answer_options'],
-                            'answer_idx' : dev[key]['answer_options'].index(dev[key]['answer']),
-                            'document' : hit['title'] + ' ' + hit['text'],
+                            'answer_choices' : answer_options,
+                            'answer_idx' : answer_options.index(dev[key]['answer']),
+                            'document' : hit['_source']['title'] + ' ' + hit['_source']['text'],
                             'is_gold' : False
-                        }
+                        })
 
             es_remove_index(q_id)
+            #print(out['data'])
 
     with open(ds_names[ds_id]+'_FZ-MedQA.json',"w") as file:
         json.dump(out, file, indent=6)
