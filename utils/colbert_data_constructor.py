@@ -15,26 +15,30 @@ Run 'docker compose up' with the supplied docker-compose.yml file to start two c
 
 parser = argparse.ArgumentParser(description="Generate FZxMedQA Dataset")
 parser.add_argument(
-    "chunk_size", type=int, nargs='?', default=100, help="number of tokens within a chunk"
+    "chunk_size",
+    type=int,
+    nargs="?",
+    default=100,
+    help="number of tokens within a chunk",
 )
 parser.add_argument(
     "stride",
     type=int,
-    nargs='?',
+    nargs="?",
     default=50,
     help="size of stride window (to avoid excluding connected contexts)",
 )
 parser.add_argument(
     "cache_dir",
     type=str,
-    nargs='?',
+    nargs="?",
     default="data/dataset/",
     help="where to download temporary dataset files (relative dir from working directory)",
 )
 parser.add_argument(
     "output",
     type=str,
-    nargs='?',
+    nargs="?",
     default="data/dataset/",
     help="where to output final datasets (relative dir from working directory)",
 )
@@ -56,12 +60,15 @@ def getDocChunks(article, chunkSize=100, stride=50):
 
 
 def is_positive(document, answer, synonyms):
+    # positive if document contains answer
+    # positive if document contains a synonym
     if re.search(rf"\b{answer}\b", document, re.IGNORECASE):
         return True
     elif any(re.search(rf"\b{name}\b", document, re.IGNORECASE) for name in synonyms):
         return True
 
     return False
+
 
 train_url = "https://drive.google.com/uc?id=1WZFwLpM_2RNHP2QE-JHlCm5mcb7I0FtN"
 dev_url = "https://drive.google.com/uc?id=16sJUgYCVwYSp5Zy35xW7NlUUBGhDNdWO"
@@ -73,9 +80,9 @@ output = [
     str(os.path.join(args.cache_dir, "test.json")),
 ]
 
-gdown.download(train_url, output[0], quiet=False)
-gdown.download(dev_url, output[1], quiet=False)
-gdown.download(test_url, output[2], quiet=False)
+gdown.cached_download(train_url, output[0], quiet=False)
+gdown.cached_download(dev_url, output[1], quiet=False)
+gdown.cached_download(test_url, output[2], quiet=False)
 
 with open(output[0], "rb") as f:
     train = json.load(f)
@@ -91,14 +98,10 @@ ds_names = ["train", "val", "test"]
 
 counter = 0
 
-out = {
-    "test": "Nothing to see here!"
-}
-
+state  = {}
 for ds_id, ds in enumerate(datasets):
     out = {"version": "0.0.1", "data": []}
     for key in tqdm(ds.keys()):
-
         if ds[key]["FZ_results"]:
             q_id = int(key[1:])
             es_create_index(q_id)
@@ -110,6 +113,7 @@ for ds_id, ds in enumerate(datasets):
                 for opt in ds[key]["answer_options"].keys()
             ]
 
+            # ingest mapped findzebra articles to elasticsearch
             for article in ds[key]["FZ_results"]:
                 synonyms.update(article["synonyms"])
                 docs = getDocChunks(
@@ -122,15 +126,13 @@ for ds_id, ds in enumerate(datasets):
                 for doc in docs:
                     _ = es_ingest(q_id, article["title"], doc)
 
+            # search passage chunks
             es_res = es_search(q_id, ds[key]["question"], length_)
 
             for hit in es_res["hits"]:
                 counter += 1
-                if is_golden == False:
-                    is_golden = is_positive(
-                        hit["_source"]["text"], ds[key]["answer"], synonyms
-                    )
-
+                # check for golden passage only if it has not been found yey
+                if is_golden == False and is_positive(hit["_source"]["text"], ds[key]["answer"], synonyms):
                     out["data"].append(
                         {
                             "idx": counter,
@@ -144,7 +146,7 @@ for ds_id, ds in enumerate(datasets):
                             "is_gold": is_golden,
                         }
                     )
-
+                    is_golden = True # golden passage has been found for this question
                 else:
                     out["data"].append(
                         {
@@ -159,9 +161,10 @@ for ds_id, ds in enumerate(datasets):
                             "is_gold": False,
                         }
                     )
-
             es_remove_index(q_id)
 
-    with open(os.path.join(args.output, ds_names[ds_id] + "_FZ-MedQA.json"), "w") as file:
+    with open(
+        os.path.join(args.output, ds_names[ds_id] + "_FZ-MedQA.json"), "w"
+    ) as file:
         # output dir must exist
         json.dump(out, file, indent=6)
