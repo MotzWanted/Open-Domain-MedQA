@@ -1,7 +1,7 @@
 import sys
 from elasticsearch import Elasticsearch
 
-es = Elasticsearch() # ElasticSearch instance
+es = Elasticsearch(timeout=30) # ElasticSearch instance
 
 def es_create_index(index_name:str):
     """
