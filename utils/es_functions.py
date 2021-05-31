@@ -3,7 +3,7 @@ from elasticsearch import Elasticsearch
 
 es = Elasticsearch(timeout=30) # ElasticSearch instance
 
-def es_create_index(index_name:str):
+def es_create_index(index_name:str, ignore=[400]):
     """
     Create ElasticSearch Index
     """
@@ -23,7 +23,7 @@ def es_ingest(index_name:str, title:str, paragraph:str):
         'title': title,
         'text': paragraph
     }
-    response = es.index(index=index_name, body=doc, ignore=[400])
+    response = es.index(index=index_name, body=doc)
     return response
 
 def es_search(index_name:str, query:str, results:int):
