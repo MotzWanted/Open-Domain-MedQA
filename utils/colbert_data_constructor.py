@@ -115,7 +115,7 @@ for ds_id, ds in enumerate(datasets):
         'version': '0.0.1',
         'data': []
         }
-
+        
     print("Ingesting all articles to ElasticSearch")
     ingest_all(ds, ds_names[ds_id])
     print("Finish ingesting all articles")
@@ -143,21 +143,18 @@ for ds_id, ds in enumerate(datasets):
                         'is_gold' : True
                     })
                     is_golden=True
-
-                out['data'].append({
-                        'idx' : counter,
-                        'question_id' : q_id,
-                        'question' : ds[key]['question'],
-                        'answer_choices' : answer_options,
-                        'answer_idx' : answer_options.index(ds[key]['answer']),
-                        'document' : hit['_source']['title'] + ' ' + hit['_source']['text'],
-                        'is_gold' : False
-                    })
+                else:
+                    out['data'].append({
+                            'idx' : counter,
+                            'question_id' : q_id,
+                            'question' : ds[key]['question'],
+                            'answer_choices' : answer_options,
+                            'answer_idx' : answer_options.index(ds[key]['answer']),
+                            'document' : hit['_source']['title'] + ' ' + hit['_source']['text'],
+                            'is_gold' : False
+                        })
 
     es_remove_index(ds_names[ds_id])
 
-    with open(
-        os.path.join(args.output, ds_names[ds_id] + "_FZ-MedQA.json"), "w"
-    ) as file:
-        # output dir must exist
+    with open(os.path.join(args.output, ds_names[ds_id] + "_FZ-MedQA.json"), "w") as file:
         json.dump(out, file, indent=6)

@@ -23,7 +23,7 @@ def es_ingest(index_name:str, title:str, paragraph:str):
         'title': title,
         'text': paragraph
     }
-    response = es.index(index=index_name, body=doc)
+    response = es.index(index=index_name, body=doc, ignore=[400])
     return response
 
 def es_search(index_name:str, query:str, results:int):
