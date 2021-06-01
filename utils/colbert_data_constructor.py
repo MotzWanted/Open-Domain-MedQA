@@ -29,6 +29,13 @@ parser.add_argument(
     help="size of stride window (to avoid excluding connected contexts)",
 )
 parser.add_argument(
+    "max_es_returns",
+    type=int,
+    nargs="?",
+    default=100,
+    help="maximum number of docs elasticsearch may return",
+)
+parser.add_argument(
     "cache_dir",
     type=str,
     nargs="?",
@@ -74,16 +81,11 @@ def ingest_all(data, dateset_name):
     for key in tqdm(data.keys()):
         if data[key]['FZ_results']:
             for article in data[key]['FZ_results']:
-                docs = getDocChunks(article['doc_context'], chunkSize=100, stride=50)
+                docs = getDocChunks(article['doc_context'], chunkSize=args.chunk_size, stride=args.stride)
                 for doc in docs:
                     _ = es_ingest(dateset_name, article['title'], doc)
 
-
-train_url = 'https://drive.google.com/uc?id=1K8Lu0rI2rK-WZFLxmuQ60mRNWIbSmiy2'
-dev_url = 'https://drive.google.com/uc?id=16sJUgYCVwYSp5Zy35xW7NlUUBGhDNdWO'
-test_url = 'https://drive.google.com/uc?id=1WZFwLpM_2RNHP2QE-JHlCm5mcb7I0FtN'
-
-train_url = "https://drive.google.com/uc?id=1WZFwLpM_2RNHP2QE-JHlCm5mcb7I0FtN"
+train_url = "https://drive.google.com/uc?id=1K8Lu0rI2rK-WZFLxmuQ60mRNWIbSmiy2"
 dev_url = "https://drive.google.com/uc?id=16sJUgYCVwYSp5Zy35xW7NlUUBGhDNdWO"
 test_url = "https://drive.google.com/uc?id=1WZFwLpM_2RNHP2QE-JHlCm5mcb7I0FtN"
 
@@ -129,7 +131,7 @@ for ds_id, ds in enumerate(datasets):
             length_ = 0
             answer_options = [ds[key]['answer_options'][opt] for opt in ds[key]['answer_options'].keys()]
 
-            es_res = es_search(ds_names[ds_id], ds[key]['question'], 100)
+            es_res = es_search(ds_names[ds_id], ds[key]['question'], args.max_es_returns)
 
             for hit in es_res['hits']:
                 if is_positive(hit['_source']['text'], ds[key]['answer'], synonyms) and is_golden==False:
